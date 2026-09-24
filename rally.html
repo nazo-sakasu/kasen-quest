@@ -140,12 +140,13 @@
   .info-row b{ font-size:.8rem; font-weight:700; color:var(--teal-dark); }
 
   .tel{
-    display:block; text-align:center; text-decoration:none;
-    font-family:var(--font-display); font-size:1.5rem; color:var(--vermilion);
-    letter-spacing:.04em; padding:4px 0 2px;
+    color:var(--vermilion); font-weight:700; text-decoration:none;
+    border-bottom:1px solid rgba(221,70,19,.4);
   }
-  .tel-staff{ margin:0; text-align:center; font-size:.88rem; font-weight:700; }
-  .tel-note{ margin:9px 0 0; font-size:.8rem; color:#6E5C4A; }
+  .info-row em{ font-style:normal; font-size:.84rem; color:#5B4C3E; margin-left:7px; }
+  .tel-note{
+    margin:0; padding:0 16px 13px; font-size:.76rem; color:#6E5C4A; line-height:1.6;
+  }
 
   details.acc{
     margin-top:14px; background:#FDF3E2; border:2px solid var(--ink); border-radius:6px;
@@ -316,16 +317,13 @@
 
     <section class="info" id="about">
       <div class="info-head">開催概要</div>
-      <div class="info-body" id="infoBody"></div>
-    </section>
-
-    <section class="info" id="contact">
-      <div class="info-head">緊急連絡先</div>
-      <div class="info-body">
-        <a class="tel" id="telLink" href="#"><span id="telNo"></span></a>
-        <p class="tel-staff" id="telStaff"></p>
-        <p class="tel-note" id="telNote"></p>
+      <div class="info-body" id="infoBody">
+        <div class="info-row">
+          <b>緊急連絡先</b>
+          <span><a class="tel" id="telLink" href="#"><span id="telNo"></span></a><em id="telStaff"></em></span>
+        </div>
       </div>
+      <p class="tel-note" id="telNote"></p>
     </section>
 
     <details class="acc" id="howto">
@@ -497,19 +495,20 @@
   /* ---- 開催概要・連絡先・参加方法・注意事項 ---- */
   (function(){
     var body = document.getElementById("infoBody");
+    var contactRow = body.firstElementChild;
     EVENT_INFO.forEach(function(row){
       var el = document.createElement("div");
       el.className = "info-row";
       el.innerHTML = "<b></b><span></span>";
       el.querySelector("b").textContent = row.label;
       el.querySelector("span").textContent = row.value;
-      body.appendChild(el);
+      body.insertBefore(el, contactRow);
     });
 
     var tel = String(CONTACT.tel || "");
     document.getElementById("telNo").textContent = tel;
     document.getElementById("telLink").setAttribute("href", "tel:" + tel.replace(/[^0-9+]/g, ""));
-    document.getElementById("telStaff").textContent = CONTACT.staff || "";
+    document.getElementById("telStaff").textContent = CONTACT.staff ? "（" + CONTACT.staff + "）" : "";
     document.getElementById("telNote").textContent = CONTACT.note || "";
 
     var ol = document.getElementById("howtoList");
