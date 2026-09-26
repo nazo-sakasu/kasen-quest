@@ -204,6 +204,8 @@
   }
   .btn:active{ transform:translate(3px,3px); box-shadow:0 0 0 var(--ink); }
   .btn--line{ background:#06C755; color:#0A2E17; }
+  .btn--go{ background:var(--vermilion); }
+  .final .btn{ margin-top:18px; }
 
   /* ---- bottom nav ---- */
   .navbar{
@@ -324,8 +326,9 @@
     <div class="grid" id="grid"></div>
 
     <section class="final" id="final" hidden>
-      <h2>最終問題</h2>
+      <h2>FINAL STEP</h2>
       <p id="finalText"></p>
+      <a class="btn btn--go" id="finalBtn" href="#">FINAL STEPへ進む</a>
     </section>
 
     <section class="info" id="about">
@@ -410,9 +413,15 @@
   /* ================= 設定 ================= */
   var LINE_URL  = "https://lin.ee/totsOhQ";
   var STORE_KEY = "kasen-rally-2026";
+  var FINAL_URL = "index.html";   // FINAL STEP（最終問題）ページ
+  var GOAL_WAIT = 5;              // ゴール到着後、FINAL STEPへ移動するまでの秒数
 
   // すべてのスタンプが集まったときに表示される文章
   var FINAL_TEXT = "全てのカードを使い、最後の目的地を探し出し、そこへ向かえ！\nそこに行くと、最後のQRコードが隠されている。";
+
+  // 6つ揃ったときに7th STEPの枠へ出す案内
+  var GOAL_GUIDE = "7th STEPの問題は、ある場所を指し示す。<br>その場所がわかったら、その場所へ行こう！";
+  var GOAL_LOCKED = "まだ1st〜6th STEPのスタンプが揃っていません。<br>先に残りの問題を解こう！";
 
   // 開催概要
   var EVENT_INFO = [
@@ -434,7 +443,8 @@
     "園内7か所のスポットを探し、設置された問題用紙を見つけよう！",
     "問題が解けたら、このスタンプ帳の同じSTEPの枠をタップして答えを入力！",
     "正解するとスタンプを獲得。カードにスタンプが押されます。",
-    "7つ全てのスタンプを集めよう！",
+    "6つのスタンプを集めると、7th STEPが現れる！",
+    "7th STEPが示す場所へ行き、そこにあるQRコードを読み取ろう！",
     "すると・・・"
   ];
 
@@ -467,7 +477,8 @@
     { no:4, img:"q4.png", stampImg:"s4.png", text:"結んで出てくる言葉は？",             answers:["キソ","木曽"] },
     { no:5, img:"q5.png", stampImg:"s5.png", text:"建屋ナンバーは？",                   answers:["C","566","#566"] },
     { no:6, img:"q6.png", stampImg:"s6.png", text:"大滝をつくろう！",                   answers:["シゼン","自然"] },
-    { no:7, img:"q7.png", stampImg:"s7.png", text:"これまでの足跡を頼りに！",           answers:["青矢印","青い矢印","あおやじるし"] }
+    // 7th STEPは回答入力なし。現地ポスターのQR（rally.html?goal=1）で獲得します
+    { no:7, img:"q7.png", stampImg:"s7.png", text:"これまでの足跡を頼りに！", goal:true, answers:[] }
   ];
 
   /* ======================================= */
@@ -585,10 +596,29 @@
   }
 
   /* ---- スタンプ帳 ---- */
+  function firstSixDone(){
+    return QUESTIONS.filter(function(q){ return !q.goal; })
+                    .every(function(q){ return !!state[q.no]; });
+  }
+  function goalQ(){
+    return QUESTIONS.filter(function(q){ return q.goal; })[0];
+  }
+
   function renderGrid(){
     grid.innerHTML = "";
+    var sixDone = firstSixDone();
     QUESTIONS.forEach(function(q){
       var done = !!state[q.no];
+      if (q.goal) {
+        if (!sixDone) return;              // 6つ揃うまでは枠ごと出さない
+        if (!done) {
+          var note = document.createElement("div");
+          note.className = "notecell";
+          note.innerHTML = "<b>7th STEP</b><p>" + GOAL_GUIDE + "</p>";
+          grid.appendChild(note);
+          return;
+        }
+      }
       var cell = document.createElement("button");
       cell.type = "button";
       cell.className = "cell " + (done ? "done" : "todo");
@@ -603,21 +633,13 @@
       grid.appendChild(cell);
     });
 
-    // 1st〜6th STEPがすべて揃ったら、7th STEPへの案内を表示
-    var firstSix = QUESTIONS.slice(0, 6).every(function(q){ return !!state[q.no]; });
-    if (firstSix) {
-      var note = document.createElement("div");
-      note.className = "notecell";
-      note.innerHTML = "<b>7th STEP</b><p>7th STEPの問題は、ある場所を指し示す。<br>その場所がわかったら、その場所へ行こう！</p>";
-      grid.appendChild(note);
-    }
-
     var count = doneCount();
     gotEl.textContent = count;
     barFill.style.width = Math.round(count / QUESTIONS.length * 100) + "%";
 
     if (count === QUESTIONS.length) {
       finalText.textContent = FINAL_TEXT;
+      document.getElementById("finalBtn").setAttribute("href", FINAL_URL);
       finalBox.hidden = false;
     } else {
       finalBox.hidden = true;
@@ -646,16 +668,21 @@
     doneNote.hidden = !done;
     doneMsg.textContent = done ? "この問題のスタンプは獲得済みです。" : "";
 
+    nextBtn.textContent = "スタンプ帳にもどる";
+    nextBtn.onclick = closeSheet;
+    showSheet();
+  }
+  function showSheet(){
     if (typeof sheet.showModal === "function") sheet.showModal();
     else sheet.setAttribute("open", "");
   }
   function closeSheet(){
+    if (goalTimer) { clearInterval(goalTimer); goalTimer = null; }
     if (typeof sheet.close === "function") sheet.close();
     else sheet.removeAttribute("open");
     renderGrid();
   }
   document.getElementById("closeBtn").addEventListener("click", closeSheet);
-  document.getElementById("nextBtn").addEventListener("click", closeSheet);
   sheet.addEventListener("cancel", function(){ setTimeout(renderGrid, 0); });
 
   qform.addEventListener("submit", function(e){
@@ -699,7 +726,64 @@
     qanswer.select();
   });
 
+  var nextBtn = document.getElementById("nextBtn");
+  var goalTimer = null;
+
+  function openGoal(){
+    var q = goalQ();
+    if (!q) return;
+    current = null;
+    sheetTitle.textContent = "7th STEP";
+    qform.hidden = true;
+    doneNote.hidden = false;
+    qfeedback.textContent = "";
+
+    if (!firstSixDone()) {           // まだ6つ揃っていない場合
+      sheetImg.innerHTML = imgHtml(q.img, q.no);
+      qlabel.textContent = "7th STEP";
+      qtext.innerHTML = GOAL_LOCKED;
+      doneMsg.textContent = "";
+      nextBtn.textContent = "スタンプ帳にもどる";
+      nextBtn.onclick = closeSheet;
+      showSheet();
+      return;
+    }
+
+    if (!state[q.no]) {              // 到着：スタンプ獲得
+      state[q.no] = new Date().toISOString();
+      saveState(state);
+      renderGrid();
+    }
+    sheetImg.innerHTML = imgHtml(q.stampImg || q.img, q.no);
+    var sw = sheetImg.querySelector("img");
+    if (sw) sw.className = "swap";
+    qlabel.textContent = "ゴール";
+    qtext.textContent = "最後の目的地にたどり着いた！";
+    nextBtn.textContent = "FINAL STEPへ進む";
+    nextBtn.onclick = function(){ window.location.href = FINAL_URL; };
+    showSheet();
+
+    var left = GOAL_WAIT;
+    doneMsg.textContent = "7th STEPのスタンプを獲得！　" + left + "秒後にFINAL STEPへ移動します";
+    if (goalTimer) clearInterval(goalTimer);
+    goalTimer = setInterval(function(){
+      left--;
+      if (left > 0) {
+        doneMsg.textContent = "7th STEPのスタンプを獲得！　" + left + "秒後にFINAL STEPへ移動します";
+      } else {
+        clearInterval(goalTimer);
+        doneMsg.textContent = "FINAL STEPへ移動します…";
+        window.location.href = FINAL_URL;
+      }
+    }, 1000);
+  }
+
   renderGrid();
+
+  // ?goal=1 （現地ポスターのQR）
+  if (/[?&]goal=1/.test(window.location.search)) {
+    openGoal();
+  }
 
   // ?s=3 の形でアクセスされたら、その問題を直接開く
   var m = /[?&]s=(\d+)/.exec(window.location.search);
