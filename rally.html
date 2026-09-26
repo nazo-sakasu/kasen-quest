@@ -419,6 +419,10 @@
   // すべてのスタンプが集まったときに表示される文章
   var FINAL_TEXT = "全てのカードを使い、最後の目的地を探し出し、そこへ向かえ！\nそこに行くと、最後のQRコードが隠されている。";
 
+  // 本部で獲得するSTEP（staff:true）の枠に出す案内
+  var STAFF_GUIDE  = "正解がわかったら本部へ！";
+  var STAFF_DONE   = "1st STEPのスタンプを獲得！　次の問題カードを受け取ろう！";
+
   // 6つ揃ったときに7th STEPの枠へ出す案内
   var GOAL_GUIDE = "7th STEPの問題は、ある場所を指し示す。<br>その場所がわかったら、その場所へ行こう！";
   var GOAL_LOCKED = "まだ1st〜6th STEPのスタンプが揃っていません。<br>先に残りの問題を解こう！";
@@ -440,9 +444,9 @@
 
   // 参加方法（番号は自動でつきます）
   var HOW_TO = [
-    "園内7か所のスポットを探し、設置された問題用紙を見つけよう！",
+    "1st STEPの正解がわかったら本部へ！",
+    "園内のスポットを探し、設置された問題用紙やカードを見つけよう！",
     "問題が解けたら、このスタンプ帳の同じSTEPの枠をタップして答えを入力！",
-    "正解するとスタンプを獲得。カードにスタンプが押されます。",
     "6つのスタンプを集めると、7th STEPが現れる！",
     "7th STEPが示す場所へ行き、そこにあるQRコードを読み取ろう！",
     "すると・・・"
@@ -471,7 +475,8 @@
   // img ＝ 問題画像／stampImg ＝ 正解時に切り替わるスタンプ画像
   // 画像はHTMLと同じ場所に置き、ファイル名を合わせてください（未用意なら空文字でOK）
   var QUESTIONS = [
-    { no:1, img:"q1.png", stampImg:"s1.png", text:"足跡を探せ！",                       answers:["スタート","start"] },
+    // 1st STEPは回答入力なし。本部のQR（rally.html?stamp=1）で獲得します
+    { no:1, img:"q1.png", stampImg:"s1.png", text:"足跡を探せ！", staff:true, answers:[] },
     { no:2, img:"q2.png", stampImg:"s2.png", text:"ポスターにあって、カードにないものは？", answers:["A"] },
     { no:3, img:"q3.png", stampImg:"s3.png", text:"吉岡各務原市議の好きな料理は？",       answers:["C","ラーメン"] },
     { no:4, img:"q4.png", stampImg:"s4.png", text:"結んで出てくる言葉は？",             answers:["キソ","木曽"] },
@@ -619,6 +624,15 @@
           return;
         }
       }
+      if (q.staff && !done) {
+        var snote = document.createElement("button");
+        snote.type = "button";
+        snote.className = "notecell";
+        snote.innerHTML = "<b>" + stepName(q.no) + "</b><p>" + STAFF_GUIDE + "</p>";
+        snote.addEventListener("click", function(){ openStaff(q); });
+        grid.appendChild(snote);
+        return;
+      }
       var cell = document.createElement("button");
       cell.type = "button";
       cell.className = "cell " + (done ? "done" : "todo");
@@ -651,6 +665,7 @@
   var tries = {};
 
   function openSheet(q){
+    if (q.staff) { openStaff(q); return; }
     current = q;
     var done = !!state[q.no];
     sheetTitle.textContent = stepName(q.no);
@@ -727,6 +742,37 @@
   });
 
   var nextBtn = document.getElementById("nextBtn");
+
+  // 本部で付与するスタンプ（?stamp=1 のQR、または枠をタップしたときの案内）
+  function openStaff(q, grant){
+    current = null;
+    sheetTitle.textContent = stepName(q.no);
+    qform.hidden = true;
+    doneNote.hidden = false;
+    qfeedback.textContent = "";
+    nextBtn.textContent = "スタンプ帳にもどる";
+    nextBtn.onclick = closeSheet;
+
+    if (grant && !state[q.no]) {
+      state[q.no] = new Date().toISOString();
+      saveState(state);
+      renderGrid();
+    }
+    if (state[q.no]) {
+      sheetImg.innerHTML = imgHtml(q.stampImg || q.img, q.no);
+      var sw = sheetImg.querySelector("img");
+      if (sw) sw.className = "swap";
+      qlabel.textContent = "獲得";
+      qtext.textContent = q.text;
+      doneMsg.textContent = STAFF_DONE;
+    } else {
+      sheetImg.innerHTML = imgHtml(q.img, q.no);
+      qlabel.textContent = stepName(q.no);
+      qtext.innerHTML = STAFF_GUIDE;
+      doneMsg.textContent = "";
+    }
+    showSheet();
+  }
   var goalTimer = null;
 
   function openGoal(){
@@ -783,6 +829,13 @@
   // ?goal=1 （現地ポスターのQR）
   if (/[?&]goal=1/.test(window.location.search)) {
     openGoal();
+  }
+
+  // ?stamp=1 （本部スタッフが提示するQR）
+  var sm = /[?&]stamp=(\d+)/.exec(window.location.search);
+  if (sm) {
+    var sq = QUESTIONS.filter(function(q){ return q.staff && String(q.no) === sm[1]; })[0];
+    if (sq) openStaff(sq, true);
   }
 
   // ?s=3 の形でアクセスされたら、その問題を直接開く
