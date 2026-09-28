@@ -244,7 +244,7 @@
     font-size:1.3rem; line-height:1; cursor:pointer; padding:2px 4px; font-family:inherit;
   }
   .sheet-img{
-    position:relative; background:var(--sand); aspect-ratio:4/3;
+    position:relative; background:var(--sand); aspect-ratio:1/1;
     display:grid; place-items:center; border-bottom:2px solid var(--ink); overflow:hidden;
   }
   .sheet-img img{ width:100%; height:100%; object-fit:contain; display:block; }
@@ -476,14 +476,14 @@
   // 画像はHTMLと同じ場所に置き、ファイル名を合わせてください（未用意なら空文字でOK）
   var QUESTIONS = [
     // 1st STEPは回答入力なし。本部のQR（rally.html?stamp=1）で獲得します
-    { no:1, img:"q1.png", stampImg:"s1.png", text:"足跡を探せ！", staff:true, answers:[] },
-    { no:2, img:"q2.png", stampImg:"s2.png", text:"ポスターにあって、カードにないものは？", answers:["A"] },
-    { no:3, img:"q3.png", stampImg:"s3.png", text:"吉岡各務原市議の好きな料理は？",       answers:["C","ラーメン"] },
-    { no:4, img:"q4.png", stampImg:"s4.png", text:"結んで出てくる言葉は？",             answers:["キソ","木曽"] },
-    { no:5, img:"q5.png", stampImg:"s5.png", text:"建屋ナンバーは？",                   answers:["C","566","#566"] },
-    { no:6, img:"q6.png", stampImg:"s6.png", text:"大滝をつくろう！",                   answers:["シゼン","自然"] },
+    { no:1, img:"q1.webp", stampImg:"",         text:"足跡を探せ！", staff:true, answers:[] },
+    { no:2, img:"q2.webp", stampImg:"s2.webp", text:"ポスターにあって、カードにないものは？", answers:["A"] },
+    { no:3, img:"q3.webp", stampImg:"s3.webp", text:"吉岡各務原市議の好きな料理は？",       answers:["C","ラーメン"] },
+    { no:4, img:"q4.webp", stampImg:"s4.webp", text:"結んで出てくる言葉は？",             answers:["キソ","木曽"] },
+    { no:5, img:"q5.webp", stampImg:"s5.webp", text:"建屋ナンバーは？",                   answers:["C","566","#566"] },
+    { no:6, img:"q6.webp", stampImg:"s6.webp", text:"大滝をつくろう！",                   answers:["シゼン","自然"] },
     // 7th STEPは回答入力なし。現地ポスターのQR（rally.html?goal=1）で獲得します
-    { no:7, img:"q7.png", stampImg:"s7.png", text:"これまでの足跡を頼りに！", goal:true, answers:[] }
+    { no:7, img:"q7.webp", stampImg:"",         text:"これまでの足跡を頼りに！", goal:true, answers:[] }
   ];
 
   /* ======================================= */
@@ -759,7 +759,8 @@
       renderGrid();
     }
     if (state[q.no]) {
-      sheetImg.innerHTML = imgHtml(q.stampImg || q.img, q.no);
+      sheetImg.innerHTML = imgHtml(q.stampImg || q.img, q.no) +
+        (q.stampImg ? "" : '<span class="press"><span>済</span></span>');
       var sw = sheetImg.querySelector("img");
       if (sw) sw.className = "swap";
       qlabel.textContent = "獲得";
@@ -800,9 +801,10 @@
       saveState(state);
       renderGrid();
     }
-    sheetImg.innerHTML = imgHtml(q.stampImg || q.img, q.no);
+    sheetImg.innerHTML = imgHtml(q.stampImg || q.img, q.no) +
+      (q.stampImg ? "" : '<span class="press animate"><span>済</span></span>');
     var sw = sheetImg.querySelector("img");
-    if (sw) sw.className = "swap";
+    if (sw && q.stampImg) sw.className = "swap";
     qlabel.textContent = "ゴール";
     qtext.textContent = "最後の目的地にたどり着いた！";
     nextBtn.textContent = "FINAL STEPへ進む";
