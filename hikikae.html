@@ -214,6 +214,24 @@
 (function(){
   "use strict";
 
+  /* ===== アクセス解析（GA4） ===== */
+  var GA_ID = "";   // ★ GA4の測定ID（G-XXXXXXXXXX）。空のままなら計測しません
+  function initGA(){
+    if (!GA_ID) return;
+    var sc = document.createElement("script");
+    sc.async = true;
+    sc.src = "https://www.googletagmanager.com/gtag/js?id=" + GA_ID;
+    document.head.appendChild(sc);
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function(){ window.dataLayer.push(arguments); };
+    window.gtag("js", new Date());
+    window.gtag("config", GA_ID);
+  }
+  function track(name, params){
+    try { if (window.gtag) window.gtag("event", name, params || {}); } catch(e){}
+  }
+  initGA();
+
   /* ===== 設定 ===== */
   var STAFF_PIN = "1017";                  // スタッフ引換PIN
   var STORE_KEY = "kasen-ticket-2026";     // 端末に保存するキー
@@ -281,6 +299,7 @@
 
   var ticket = read() || issue();
   render(ticket);
+  track("ticket_view", { status: ticket.status });
 
   staffBtn.addEventListener("click", function(){
     dlgMsg.textContent = "";
@@ -295,6 +314,7 @@
     if (pin !== STAFF_PIN) { dlgMsg.textContent = "PINが違います。"; return; }
     ticket.status = "引換済";
     ticket.redeemedAt = stamp(new Date());
+    track("ticket_redeemed", {});
     save(ticket);
     dialog.close();
     render(ticket);

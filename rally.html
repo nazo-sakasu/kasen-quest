@@ -409,6 +409,24 @@
 (function(){
   "use strict";
 
+  /* ===== アクセス解析（GA4） ===== */
+  var GA_ID = "";   // ★ GA4の測定ID（G-XXXXXXXXXX）。空のままなら計測しません
+  function initGA(){
+    if (!GA_ID) return;
+    var sc = document.createElement("script");
+    sc.async = true;
+    sc.src = "https://www.googletagmanager.com/gtag/js?id=" + GA_ID;
+    document.head.appendChild(sc);
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function(){ window.dataLayer.push(arguments); };
+    window.gtag("js", new Date());
+    window.gtag("config", GA_ID);
+  }
+  function track(name, params){
+    try { if (window.gtag) window.gtag("event", name, params || {}); } catch(e){}
+  }
+  initGA();
+
   /* ================= 設定 ================= */
   var LINE_URL  = "https://lin.ee/totsOhQ";
   var STORE_KEY = "kasen-rally-2026";
@@ -423,7 +441,7 @@
   var STAFF_DONE   = "1st STEPのスタンプを獲得！　次の問題カードを受け取ろう！";
 
   // 6つ揃ったときに7th STEPの枠へ出す案内
-  var GOAL_GUIDE = "7th STEPの問題は、ある場所を指し示す。<br>その場所がわかったら、その場所へ行こう！";
+  var GOAL_GUIDE = "7th STEPの問題は、<br>ある場所を指し示す。<br>その場所がわかったら、<br>その場所へ行こう！";
   var GOAL_LOCKED = "まだ1st〜6th STEPのスタンプが揃っていません。<br>先に残りの問題を解こう！";
 
   // 開催概要
@@ -519,6 +537,7 @@
   var state = loadState() || {};
 
   document.getElementById("hintBtn").setAttribute("href", LINE_URL);
+  document.getElementById("hintBtn").addEventListener("click", function(){ track("hint_line_click", { page: "rally" }); });
   totalEl.textContent = QUESTIONS.length;
 
   /* ---- 開催概要・連絡先・参加方法・注意事項 ---- */
@@ -711,6 +730,7 @@
     if (isCorrect(current, value)) {
       state[current.no] = new Date().toISOString();
       saveState(state);
+      track("stamp_get", { step: stepName(current.no), step_no: current.no, method: "answer" });
 
       if (current.stampImg) {
         sheetImg.innerHTML = imgHtml(current.stampImg, current.no);
@@ -730,6 +750,7 @@
       return;
     }
     tries[current.no] = (tries[current.no] || 0) + 1;
+    track("answer_wrong", { step: stepName(current.no), step_no: current.no, tries: tries[current.no] });
     qfeedback.className = "feedback ng";
     qfeedback.textContent = tries[current.no] >= 3
       ? "まだ違うようです。問題用紙をもう一度よく見てみましょう。"
@@ -756,6 +777,7 @@
       state[q.no] = new Date().toISOString();
       saveState(state);
       renderGrid();
+      track("stamp_get", { step: stepName(q.no), step_no: q.no, method: "staff_qr" });
     }
     if (state[q.no]) {
       sheetImg.innerHTML = imgHtml(q.stampImg || q.img, q.no) +
@@ -799,6 +821,8 @@
       state[q.no] = new Date().toISOString();
       saveState(state);
       renderGrid();
+      track("stamp_get", { step: stepName(q.no), step_no: q.no, method: "goal_qr" });
+      track("goal_reached", {});
     }
     sheetImg.innerHTML = imgHtml(q.stampImg || q.img, q.no) +
       (q.stampImg ? "" : '<span class="press animate"><span>済</span></span>');
@@ -807,7 +831,7 @@
     qlabel.textContent = "ゴール";
     qtext.textContent = "最後の目的地にたどり着いた！";
     nextBtn.textContent = "FINAL STEPへ進む";
-    nextBtn.onclick = function(){ window.location.href = FINAL_URL; };
+    nextBtn.onclick = function(){ track("final_step_open", { from: "button" }); window.location.href = FINAL_URL; };
     showSheet();
 
     var left = GOAL_WAIT;
@@ -820,6 +844,7 @@
       } else {
         clearInterval(goalTimer);
         doneMsg.textContent = "FINAL STEPへ移動します…";
+        track("final_step_open", { from: "auto" });
         window.location.href = FINAL_URL;
       }
     }, 1000);
