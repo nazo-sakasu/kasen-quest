@@ -410,7 +410,7 @@
   "use strict";
 
   /* ===== アクセス解析（GA4） ===== */
-  var GA_ID = "";   // ★ GA4の測定ID（G-XXXXXXXXXX）。空のままなら計測しません
+  var GA_ID = "G-5B53HKZMZD";   // ★ GA4の測定ID（G-XXXXXXXXXX）。空のままなら計測しません
   function initGA(){
     if (!GA_ID) return;
     var sc = document.createElement("script");
@@ -447,15 +447,15 @@
   // 開催概要
   var EVENT_INFO = [
     { label:"開催日",   value:"2026年10月17日（土）" },
-    { label:"終了時刻", value:"15:00" },
+    { label:"時間",     value:"9:30 〜 12:00（受付 9:30〜10:00）" },
     { label:"会場",     value:"河川環境楽園・木曽川水園" },
     { label:"所要時間", value:"およそ60〜90分" }
   ];
 
   // 緊急連絡先（当日のみ）
   var CONTACT = {
-    tel:   "090-0000-0000",
-    staff: "担当：〇〇",
+    tel:   "080-3666-1600",
+    staff: "担当：森﨑",
     note:  "※イベント開催日以外のご連絡はご遠慮ください。"
   };
 
@@ -493,14 +493,14 @@
   // 画像はHTMLと同じ場所に置き、ファイル名を合わせてください（未用意なら空文字でOK）
   var QUESTIONS = [
     // 1st STEPは回答入力なし。本部のQR（rally.html?stamp=1）で獲得します
-    { no:1, img:"q1.webp", stampImg:"",         text:"足跡を探せ！", staff:true, answers:[] },
+    { no:1, img:"q1.webp", stampImg:"s1.webp", text:"足跡を探せ！", staff:true, answers:[] },
     { no:2, img:"q2.webp", stampImg:"s2.webp", text:"ポスターにあって、カードにないものは？", answers:["A"] },
     { no:3, img:"q3.webp", stampImg:"s3.webp", text:"吉岡各務原市議の好きな料理は？",       answers:["C","ラーメン"] },
     { no:4, img:"q4.webp", stampImg:"s4.webp", text:"結んで出てくる言葉は？",             answers:["キソ","木曽"] },
     { no:5, img:"q5.webp", stampImg:"s5.webp", text:"建屋ナンバーは？",                   answers:["C","566","#566"] },
     { no:6, img:"q6.webp", stampImg:"s6.webp", text:"大滝をつくろう！",                   answers:["シゼン","自然"] },
     // 7th STEPは回答入力なし。現地ポスターのQR（rally.html?goal=1）で獲得します
-    { no:7, img:"q7.webp", stampImg:"",         text:"これまでの足跡を頼りに！", goal:true, answers:[] }
+    { no:7, img:"q7.webp", stampImg:"s7.webp", text:"これまでの足跡を頼りに！", goal:true, answers:[] }
   ];
 
   /* ======================================= */
