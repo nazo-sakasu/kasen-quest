@@ -352,8 +352,9 @@
 
   /* 表記ゆれの正規化：全角→半角、カタカナ→ひらがな、「の」と記号を無視 */
   function normalize(s){
-    return String(s)
-      .replace(/[Ａ-Ｚａ-ｚ０-９]/g, function(c){ return String.fromCharCode(c.charCodeAt(0) - 0xFEE0); })
+    var t = String(s);
+    try { t = t.normalize("NFKC"); } catch(e){}   // 半角カナ・全角英数を統一
+    return t
       .replace(/[\u30a1-\u30f6]/g, function(c){ return String.fromCharCode(c.charCodeAt(0) - 0x60); })
       .replace(/[\s\u3000・。、．，!！?？"'’”「」（）()\-ー－_]/g, "")
       .replace(/の/g, "")

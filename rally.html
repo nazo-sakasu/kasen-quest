@@ -147,6 +147,10 @@
   }
   .info-row:last-child{ border-bottom:none; }
   .info-row b{ font-size:.8rem; font-weight:700; color:var(--teal-dark); }
+  .info-row small{
+    display:block; font-size:.76rem; color:var(--vermilion); font-weight:700;
+    margin-top:1px; line-height:1.5;
+  }
 
   .tel{
     color:var(--vermilion); font-weight:700; text-decoration:none;
@@ -224,13 +228,18 @@
   /* ---- question sheet ---- */
   dialog{
     border:none; padding:0; background:transparent;
-    width:min(94vw,520px); max-height:92vh; overflow:visible;
+    width:calc(100vw - 32px); max-width:500px;
+    max-height:calc(100vh - 32px);
+    max-height:calc(100dvh - 32px);
+    margin:auto; overflow:visible;
   }
   dialog::backdrop{ background:rgba(23,19,16,.55); }
   .sheet{
     background:#FDF3E2; border:2px solid var(--ink); border-radius:8px;
-    box-shadow:6px 6px 0 rgba(23,19,16,.25);
-    max-height:92vh; overflow-y:auto; -webkit-overflow-scrolling:touch;
+    box-shadow:0 12px 28px rgba(23,19,16,.35);
+    max-height:calc(100vh - 32px);
+    max-height:calc(100dvh - 32px);
+    overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain;
   }
   .sheet-head{
     position:sticky; top:0; z-index:2;
@@ -382,7 +391,7 @@
 <dialog id="sheet">
   <div class="sheet">
     <div class="sheet-head">
-      <span id="sheetTitle">第1問</span>
+      <span id="sheetTitle">1st STEP</span>
       <button class="close" id="closeBtn" type="button" aria-label="とじる">✕</button>
     </div>
     <div class="sheet-img" id="sheetImg"></div>
@@ -447,7 +456,7 @@
   // 開催概要
   var EVENT_INFO = [
     { label:"開催日",   value:"2026年10月17日（土）" },
-    { label:"時間",     value:"9:30 〜 12:00（受付 9:30〜10:00）" },
+    { label:"時間",     value:"9:30 〜 12:00（受付 9:30〜10:00）", note:"※解答締切時間 11:45" },
     { label:"会場",     value:"河川環境楽園・木曽川水園" },
     { label:"所要時間", value:"およそ60〜90分" }
   ];
@@ -462,7 +471,7 @@
   // 参加方法（番号は自動でつきます）
   var HOW_TO = [
     "1st STEPの正解がわかったら本部へ！",
-    "園内のスポットを探し、設置された問題用紙やカードを見つけよう！",
+    "園内のポイントを探し、設置された問題用紙やカードを見つけよう！",
     "問題が解けたら、このスタンプ帳の同じSTEPの枠をタップして答えを入力！",
     "6つのスタンプを集めると、7th STEPが現れる！",
     "7th STEPが示す場所へ行き、そこにあるQRコードを読み取ろう！",
@@ -484,7 +493,6 @@
       "シークレットモード（プライベートブラウズ）は使わないでください。スタンプの記録が残りません。",
       "参加中はブラウザの履歴やサイトデータを消さないでください。",
       "スタンプを集める際は、毎回同じブラウザでアクセスしてください。別のブラウザではスタンプ履歴が引き継がれません。",
-      "このページはブックマークしておくと、途中で閉じても続きから再開できます。",
       "QRコードは標準のカメラアプリで読み取ってください。",
       "iPhoneをご利用の方は、コントロールセンターの「コードスキャナー」は使用しないでください。スタンプの記録が残りません。"
     ]}
@@ -551,6 +559,11 @@
       el.innerHTML = "<b></b><span></span>";
       el.querySelector("b").textContent = row.label;
       el.querySelector("span").textContent = row.value;
+      if (row.note) {
+        var nt = document.createElement("small");
+        nt.textContent = row.note;
+        el.querySelector("span").appendChild(nt);
+      }
       body.insertBefore(el, contactRow);
     });
 
