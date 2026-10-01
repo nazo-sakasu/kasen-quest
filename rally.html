@@ -439,6 +439,7 @@
   /* ================= 設定 ================= */
   var LINE_URL  = "https://lin.ee/totsOhQ";
   var STORE_KEY = "kasen-rally-2026";
+  var START_KEY = "kasen-start-2026";   // 参加開始時刻（所要時間の計測用／参加者には表示しません）
   var FINAL_URL = "index.html";   // FINAL STEP（最終問題）ページ
   var GOAL_WAIT = 5;              // ゴール到着後、FINAL STEPへ移動するまでの秒数
 
@@ -544,6 +545,25 @@
     try { localStorage.setItem(STORE_KEY, JSON.stringify(st)); } catch(e){}
   }
   var state = loadState() || {};
+
+  /* 所要時間の計測（画面には出さず、GA4にのみ送信） */
+  function startedAt(){
+    try {
+      var v = localStorage.getItem(START_KEY);
+      if (v) return parseInt(v, 10);
+      var now = Date.now();
+      localStorage.setItem(START_KEY, String(now));
+      track("rally_start", {});
+      return now;
+    } catch(e){ return 0; }
+  }
+  function elapsedMin(){
+    var t = startedAt();
+    if (!t) return null;
+    var m = Math.round((Date.now() - t) / 60000);
+    return (m >= 0 && m < 1440) ? m : null;   // 日付をまたぐ異常値は送らない
+  }
+  startedAt();
 
   document.getElementById("hintBtn").setAttribute("href", LINE_URL);
   document.getElementById("hintBtn").addEventListener("click", function(){ track("hint_line_click", { page: "rally" }); });
@@ -684,6 +704,12 @@
     barFill.style.width = Math.round(count / QUESTIONS.length * 100) + "%";
 
     if (count === QUESTIONS.length) {
+      if (!state.__sent) {
+        var mins = elapsedMin();
+        state.__sent = 1;
+        saveState(state);
+        track("stamps_complete", mins === null ? {} : { duration_min: mins });
+      }
       finalText.textContent = FINAL_TEXT;
       document.getElementById("finalBtn").setAttribute("href", FINAL_URL);
       finalBox.hidden = false;

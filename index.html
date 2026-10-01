@@ -311,6 +311,16 @@
   }
   initGA();
 
+  var START_KEY = "kasen-start-2026";   // スタンプ帳と共通（所要時間の計測用／画面には出しません）
+  function clearMin(){
+    try {
+      var v = localStorage.getItem(START_KEY);
+      if (!v) return null;
+      var m = Math.round((Date.now() - parseInt(v, 10)) / 60000);
+      return (m >= 0 && m < 1440) ? m : null;
+    } catch(e){ return null; }
+  }
+
   /* ===== 設定（ここだけ直せば運用できます） ===== */
   var SURVEY_URL = "https://forms.cloud.microsoft/pages/responsepage.aspx?id=-jSJrRSz1keke_KLfFRthT6FCzlPLx5Ltx-LNcj3WOhUREgwUzU3T01VUVYxQkRTVzJNNlVQNUFVRC4u&origin=QRCode&route=shorturl";
   var LINE_URL   = "https://lin.ee/totsOhQ";   // ウィーケン！公式LINE
@@ -395,7 +405,8 @@
     if (answers.indexOf(normalize(value)) !== -1) {
       feedback.className = "feedback";
       feedback.textContent = "";
-      track("final_correct", {});
+      var mins = clearMin();
+      track("final_correct", mins === null ? {} : { duration_min: mins });
       quizCard.hidden = true;
       clearCard.hidden = false;
       clearCard.scrollIntoView({ block:"start", behavior:"smooth" });
