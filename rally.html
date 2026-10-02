@@ -890,6 +890,22 @@
     }, 1000);
   }
 
+  // ?reset=1 （テスト・トラブル対応用。スタンプと開始時刻を消去）
+  if (/[?&]reset=1/.test(window.location.search)) {
+    state = {};
+    try {
+      localStorage.removeItem(STORE_KEY);
+      localStorage.removeItem(START_KEY);
+    } catch(e){}
+    memory = {};
+    // ?reset=1 を履歴から外し、再読み込みで再発動しないようにする
+    try {
+      var clean = window.location.pathname;
+      window.history.replaceState(null, "", clean);
+    } catch(e){}
+    window.alert("スタンプの記録をリセットしました。");
+  }
+
   renderGrid();
 
   // ?goal=1 （現地ポスターのQR）
